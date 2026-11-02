@@ -5,7 +5,7 @@ import { requireSession, type AuthenticatedSession } from './session.js';
 
 export type Authenticate = (input: LoginInput) => Promise<AuthenticatedSession>;
 
-export const registerAuthRoutes = async (app: FastifyInstance, authenticate: Authenticate, secure: boolean) => {
+export const registerAuthRoutes = async (app: FastifyInstance, authenticate: Authenticate, secure: boolean, adminUsersAvailable = false) => {
   const cookieName = secure ? '__Host-acb_session' : 'acb_session_dev';
   app.get('/bff/v1/auth/csrf', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request, reply) => {
     const token = await reply.generateCsrf();
@@ -39,6 +39,6 @@ export const registerAuthRoutes = async (app: FastifyInstance, authenticate: Aut
 
   app.get('/bff/v1/capabilities', async request => {
     requireSession(request);
-    return { auth: true, estudiantes: false, guias: false, rutas: false, asignaciones: false, asistencia: false, alertas: false, dashboard: false, geo: false };
+    return { auth: true, estudiantes: adminUsersAvailable, guias: adminUsersAvailable, rutas: false, asignaciones: false, asistencia: false, alertas: false, dashboard: false, geo: false };
   });
 };

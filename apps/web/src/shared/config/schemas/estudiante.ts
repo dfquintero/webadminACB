@@ -1,11 +1,12 @@
 import { z } from 'zod';
-import { basePersona } from './base';
 
-export const estudianteSchema = basePersona.omit({ email: true }).extend({
-  emailPadre: z.string().email('Email inválido'),
-  edad: z.number().min(5, 'Mínimo 5 años').max(18, 'Máximo 18 años'),
-  direccion: z.string().min(10, 'Mínimo 10 caracteres'),
-  puntoRecogida: z.string().min(3),
-  telefonoPadre: z.string().regex(/^\d{10}$/, '10 dígitos'),
-  estado: z.enum(['activo', 'inactivo']),
+export const estudianteSchema = z.object({
+  documentType: z.string().min(1, 'Requerido'),
+  documentNumber: z.string().min(4, 'Mínimo 4 caracteres').max(20, 'Máximo 20 caracteres'),
+  name: z.string().min(3, 'Mínimo 3 caracteres'),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  grade: z.string().min(1, 'Requerido'),
+  schoolShift: z.string().min(1, 'Requerido'),
+  section: z.string().min(1, 'Requerido'),
 });

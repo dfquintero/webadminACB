@@ -8,7 +8,7 @@ type Props = {
 };
 
 export const AlertaFormFields = ({ control, estudiantes }: Props) => {
-  const estOptions = estudiantes.filter(e => e.estado === 'activo').map(e => ({ value: e.id, label: `${e.nombre} ${e.apellido}` }));
+  const estOptions = estudiantes.map(e => ({ value: e.id, label: e.name }));
   
   return (
     <FormSection>

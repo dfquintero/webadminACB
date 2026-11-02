@@ -11,7 +11,7 @@ export const KPICards = () => {
   const kpis = [
     { title: 'Asignaciones en curso', value: asignaciones?.filter(item => item.estado === 'en_curso').length ?? 'No disponible', icon: <DirectionsBike />, color: 'primary.main' },
     { title: 'Estudiantes', value: estudiantes?.length ?? 'No disponible', icon: <People />, color: 'secondary.main' },
-    { title: 'Guías activos', value: guias?.filter(item => item.estado === 'activo').length ?? 'No disponible', icon: <CheckCircle />, color: 'warning.main' },
+    { title: 'Guías', value: guias?.length ?? 'No disponible', icon: <CheckCircle />, color: 'warning.main' },
     { title: 'Tiempo promedio', value: 'No disponible', icon: <AccessTime />, color: 'primary.dark' },
   ];
   return <Grid container spacing={3}>{kpis.map(kpi => (

@@ -1,10 +1,12 @@
 import { z } from 'zod';
-import { basePersona } from './base';
 
-export const guiaSchema = basePersona.extend({
-  telefono: z.string().regex(/^\d{10}$/, '10 dígitos'),
-  documento: z.string().regex(/^\d{8,10}$/, '8-10 dígitos'),
-  licencia: z.string().min(3),
-  disponibilidad: z.boolean(),
-  estado: z.enum(['activo', 'inactivo']),
+export const guiaSchema = z.object({
+  documentType: z.string().min(1, 'Requerido'),
+  documentNumber: z.string().min(4, 'Mínimo 4 caracteres').max(20, 'Máximo 20 caracteres'),
+  name: z.string().min(3, 'Mínimo 3 caracteres'),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  contractNumber: z.string().min(1, 'Requerido'),
+  email: z.string().email('Email inválido'),
+  zone: z.string().min(1, 'Requerido'),
 });

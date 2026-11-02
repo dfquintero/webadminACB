@@ -8,6 +8,8 @@ import type { Redis } from 'ioredis';
 import type { BffConfig } from './config.js';
 import { ApiFault } from './errors.js';
 import { registerAuthRoutes, type Authenticate } from './modules/auth/routes.js';
+import { registerAdminUsersRoutes } from './modules/admin-users/routes.js';
+import { createUpstream } from './upstreams/http.js';
 
 type Dependencies = { store: SessionStore; authenticate: Authenticate; ready: () => Promise<boolean>; redis?: Redis; close?: () => Promise<void> };
 
@@ -55,6 +57,7 @@ export const buildApp = async (config: BffConfig, dependencies: Dependencies) =>
     const ready = await dependencies.ready().catch(() => false);
     return reply.code(ready ? 200 : 503).send({ status: ready ? 'ready' : 'unavailable' });
   });
-  await registerAuthRoutes(app, dependencies.authenticate, secure);
+  await registerAuthRoutes(app, dependencies.authenticate, secure, config.ADMIN_USERS_BASE_URL !== undefined);
+  await registerAdminUsersRoutes(app, createUpstream(config.ADMIN_USERS_BASE_URL, config));
   return app;
 };

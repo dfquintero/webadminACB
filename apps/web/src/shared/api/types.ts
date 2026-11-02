@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { guideDtoSchema, studentDtoSchema } from '@acb/contracts';
 import { estudianteSchema } from '../config/schemas/estudiante';
 import { guiaSchema } from '../config/schemas/guia';
 import { rutaSchema } from '../config/schemas/ruta';
@@ -6,8 +7,30 @@ import { asignacionSchema } from '../config/schemas/asignacion';
 import { alertaSchema } from '../config/schemas/alerta';
 
 const id = z.union([z.string().min(1), z.number().int().nonnegative()]).transform(String);
-export const estudianteResponse = estudianteSchema.extend({ id });
-export const guiaResponse = guiaSchema.extend({ id });
+export const estudianteResponse = studentDtoSchema.transform(dto => ({
+  id: String(dto.userId),
+  documentType: dto.documentType,
+  documentNumber: dto.documentNumber,
+  name: dto.name,
+  address: dto.address ?? '',
+  phone: dto.phone ?? '',
+  grade: dto.grade ?? '',
+  schoolShift: dto.schoolShift ?? '',
+  section: dto.section ?? '',
+  schoolId: dto.schoolId ?? null,
+  guardians: dto.guardians ?? [],
+}));
+export const guiaResponse = guideDtoSchema.transform(dto => ({
+  id: String(dto.userId),
+  documentType: dto.documentType,
+  documentNumber: dto.documentNumber,
+  name: dto.name,
+  address: dto.address ?? '',
+  phone: dto.phone ?? '',
+  contractNumber: dto.contractNumber ?? '',
+  email: dto.email ?? '',
+  zone: dto.zone ?? '',
+}));
 export const rutaResponse = rutaSchema.extend({ id });
 export const asignacionResponse = asignacionSchema.extend({ id });
 export const alertaResponse = alertaSchema.extend({

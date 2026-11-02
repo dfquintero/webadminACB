@@ -26,6 +26,132 @@ export const capabilitiesSchema = z.object({
   asignaciones: z.boolean(), asistencia: z.boolean(), alertas: z.boolean(), dashboard: z.boolean(), geo: z.boolean(),
 });
 
+export const guardianLinkSchema = z.object({
+  userId: z.number().int(),
+  name: z.string(),
+  phone: z.string().nullable().optional(),
+  relationship: z.string(),
+  isPrimary: z.boolean(),
+}).loose();
+
+export const studentDtoSchema = z.object({
+  userId: z.number().int(),
+  documentType: z.string(),
+  documentNumber: z.string(),
+  name: z.string(),
+  address: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  grade: z.string().nullable().optional(),
+  schoolShift: z.string().nullable().optional(),
+  section: z.string().nullable().optional(),
+  schoolId: z.number().int().nullable().optional(),
+  guardians: z.array(guardianLinkSchema).optional(),
+}).loose();
+
+export const guideDtoSchema = z.object({
+  userId: z.number().int(),
+  documentType: z.string(),
+  documentNumber: z.string(),
+  name: z.string(),
+  address: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  contractNumber: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
+  zone: z.string().nullable().optional(),
+}).loose();
+
+export const userDtoSchema = z.object({
+  userId: z.number().int(),
+  documentType: z.string(),
+  documentNumber: z.string(),
+  name: z.string(),
+  address: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  role: z.string().optional(),
+  active: z.boolean().optional(),
+}).loose();
+
+export const pagedSchema = <T extends z.ZodType>(item: T) => z.object({
+  content: z.array(item).default([]),
+  totalElements: z.number().int().nonnegative().optional(),
+  totalPages: z.number().int().nonnegative().optional(),
+  pageable: z.unknown().optional(),
+}).loose();
+
+const personInputSchema = z.object({
+  documentType: z.string().trim().min(1).max(16),
+  documentNumber: z.string().trim().min(1).max(32),
+  name: z.string().trim().min(1).max(160),
+  address: z.string().trim().max(200).optional(),
+  phone: z.string().trim().max(20).optional(),
+}).strict();
+
+export const createStudentInputSchema = z.object({
+  user: personInputSchema,
+  student: z.object({
+    grade: z.string().trim().min(1).max(32),
+    schoolShift: z.string().trim().min(1).max(32),
+    section: z.string().trim().min(1).max(16),
+    schoolId: z.number().int().positive().optional(),
+  }).strict(),
+}).strict();
+
+export const updateStudentInputSchema = z.object({
+  name: z.string().trim().min(1).max(160),
+  address: z.string().trim().max(200).optional(),
+  phone: z.string().trim().max(20).optional(),
+  grade: z.string().trim().min(1).max(32),
+  schoolShift: z.string().trim().min(1).max(32),
+  section: z.string().trim().min(1).max(16),
+}).strict();
+
+export const createGuideInputSchema = z.object({
+  user: personInputSchema,
+  guide: z.object({
+    contractNumber: z.string().trim().min(1).max(32),
+    email: z.email().max(160),
+    zone: z.string().trim().min(1).max(64),
+  }).strict(),
+}).strict();
+
+export const updateGuideInputSchema = z.object({
+  name: z.string().trim().min(1).max(160),
+  address: z.string().trim().max(200).optional(),
+  phone: z.string().trim().max(20).optional(),
+  contractNumber: z.string().trim().min(1).max(32),
+  email: z.email().max(160),
+  zone: z.string().trim().min(1).max(64),
+}).strict();
+
+export const createUserInputSchema = personInputSchema.extend({
+  role: z.enum(['GUARDIAN', 'MANAGER', 'LEADER']),
+}).strict();
+
+export const updateUserInputSchema = personInputSchema.extend({
+  role: z.enum(['GUARDIAN', 'MANAGER', 'LEADER']),
+}).strict();
+
+export const assignGuardianInputSchema = z.object({
+  guardianId: z.number().int().positive(),
+  relationship: z.string().trim().min(1).max(32),
+  isPrimary: z.boolean(),
+}).strict();
+
+export const searchParamsSchema = z.object({
+  type: z.string().trim().min(1).max(16),
+  number: z.string().trim().min(1).max(32),
+}).strict();
+
+export type StudentDto = z.infer<typeof studentDtoSchema>;
+export type GuideDto = z.infer<typeof guideDtoSchema>;
+export type UserDto = z.infer<typeof userDtoSchema>;
+export type CreateStudentInput = z.infer<typeof createStudentInputSchema>;
+export type UpdateStudentInput = z.infer<typeof updateStudentInputSchema>;
+export type CreateGuideInput = z.infer<typeof createGuideInputSchema>;
+export type UpdateGuideInput = z.infer<typeof updateGuideInputSchema>;
+export type CreateUserInput = z.infer<typeof createUserInputSchema>;
+export type UpdateUserInput = z.infer<typeof updateUserInputSchema>;
+export type AssignGuardianInput = z.infer<typeof assignGuardianInputSchema>;
 export type Capabilities = z.infer<typeof capabilitiesSchema>;
 export type ResourceKey = Exclude<keyof Capabilities, 'auth'>;
 export type LoginInput = z.infer<typeof loginInputSchema>;

@@ -17,7 +17,7 @@ export const AsistenciaCard = ({ estudiante, asistencia, onUpdate }: Props) => {
     finally { setPending(false); }
   };
   return <Card><CardContent>
-    <Typography>{estudiante.nombre} {estudiante.apellido}</Typography>
+    <Typography>{estudiante.name}</Typography>
     <Chip label={asistencia?.estado ?? 'Sin registro de asistencia'} size="small" />
     {failed && <Alert severity="error">No se pudo actualizar la asistencia.</Alert>}
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>

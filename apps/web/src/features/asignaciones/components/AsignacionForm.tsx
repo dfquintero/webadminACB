@@ -11,9 +11,9 @@ export const AsignacionForm = ({ open, onClose, onSubmit, initialData, rutas, gu
   const { control, submitForm, formState, watch } = useForm(asignacionSchema, asignacionDefault, initialData, open);
   const guia1Id = watch('guia1Id');
   const rutaOptions = rutas.filter(r => r.estado === 'activo').map(r => ({ value: r.id, label: r.nombre }));
-  const guiaOptions = guias.filter(g => g.disponibilidad && g.estado === 'activo').map(g => ({ value: g.id, label: `${g.nombre} ${g.apellido}` }));
+  const guiaOptions = guias.map(g => ({ value: g.id, label: g.name }));
   const guia2Options = guiaOptions.filter(g => g.value !== guia1Id);
-  const estOptions = estudiantes.filter(e => e.estado === 'activo').map(e => ({ value: e.id, label: `${e.nombre} ${e.apellido}`, secondary: e.puntoRecogida }));
+  const estOptions = estudiantes.map(e => ({ value: e.id, label: e.name, secondary: e.documentNumber }));
   return <FormDialog open={open} onClose={onClose} onSubmit={submitForm(onSubmit, onClose)} title="Asignación"
     pending={formState.isSubmitting} error={formState.errors.root?.message}>
     <AsignacionFormFields control={control} rutaOptions={rutaOptions} guiaOptions={guiaOptions} guia2Options={guia2Options} estOptions={estOptions} />

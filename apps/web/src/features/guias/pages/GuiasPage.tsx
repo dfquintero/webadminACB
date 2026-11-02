@@ -10,7 +10,7 @@ import type { Guia, GuiaFormData } from '@/shared/api/types';
 
 export const GuiasPage = () => {
   const { guias, isLoading, error, create, update, remove } = useGuias();
-  const { term, setTerm, filtered } = useFilteredData(guias ?? [], ['nombre', 'apellido']);
+  const { term, setTerm, filtered } = useFilteredData(guias ?? [], ['name', 'documentNumber', 'contractNumber', 'zone']);
   const { open, editingItem, handleOpen, handleClose } = useFormDialog<Guia>();
   const submit = async (data: GuiaFormData) => {
     if (editingItem) await update.mutateAsync({ id: editingItem.id, data });

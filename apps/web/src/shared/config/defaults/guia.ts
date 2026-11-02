@@ -1,12 +1,12 @@
 import type { GuiaFormData } from '../../api/types';
 
 export const guiaDefault: GuiaFormData = {
-  nombre: '',
-  apellido: '',
-  documento: '',
-  telefono: '',
+  documentType: 'CC',
+  documentNumber: '',
+  name: '',
+  address: '',
+  phone: '',
+  contractNumber: '',
   email: '',
-  licencia: '',
-  disponibilidad: true,
-  estado: 'activo',
+  zone: '',
 };

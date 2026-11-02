@@ -78,6 +78,10 @@ El BFF se ejecuta en contenedor con `NODE_ENV=development` para aceptar el orige
 
 Verificado con Docker 29.9.2: imágenes de web y BFF compiladas, los cuatro servicios saludables, CSRF real emitido a través del proxy, redirección de rutas protegidas, sesiones cifradas JWE/A256GCM con TTL en Redis real y `npm run test:integration` pasando. El login real todavía depende de que el servicio auth esté disponible en `AUTH_BASE_URL`.
 
+## Integración admin_users
+
+Con `ADMIN_USERS_BASE_URL` configurado (origen del servicio `ACB_admin_users_lo`), el BFF expone `/bff/v1/students`, `/bff/v1/guides`, `/bff/v1/users` y `/bff/v1/search`, reenviando el JWT de la sesión cifrada en Redis — el navegador nunca lo ve. Capacidades habilitadas: `estudiantes` y `guias`. Estudiantes no tiene DELETE confirmado; la UI no lo ofrece. Rutas, asignaciones, asistencia, alertas, dashboard y geo siguen reportados como no disponibles hasta confirmar contrato.
+
 ## Endpoints
 
 Web: `GET /api/health`, mínimo e independiente de las dependencias backend.
