@@ -1,0 +1,61 @@
+# Fixes for running adminACB/docker-compose.yml on this machine.
+# Does not modify that repository.
+services:
+  # Drop --initialize-insecure: it stays as a mysqld arg on the second entrypoint
+  # phase and aborts boot once the data dir is initialized.
+  acb_mysql_db:
+    command: --default-authentication-plugin=mysql_native_password
+
+  # All four Spring apps listen on container port 8080 (no server.port set);
+  # their compose maps host:container equal ports, so nothing is reachable.
+  # ACB_JWT_EXPIRATION_HOURS is required by services without that property.
+  # m2-cache holds the warmed Maven repo so builds don't depend on flaky DNS.
+  ACB_admin_operation_lo:
+    image: acb-admin-operation:dev
+    volumes:
+      - ./ACB_admin_operation_lo:/app
+      - m2-cache:/root/.m2
+    ports:
+      - "18081:8080"
+    extra_hosts:
+      - "acb_postgres_db:172.21.0.3"
+    environment:
+      - ACB_JWT_EXPIRATION_HOURS=8
+
+  ACB_admin_routes_lo:
+    image: acb-admin-routes:dev
+    volumes:
+      - ./ACB_admin_routes_lo:/app
+      - m2-cache:/root/.m2
+    ports:
+      - "18082:8080"
+    extra_hosts:
+      - "acb_mysql_db:172.21.0.2"
+    environment:
+      - ACB_JWT_EXPIRATION_HOURS=8
+
+  ACB_admin_users_lo:
+    image: acb-admin-users:dev
+    volumes:
+      - ./ACB_admin_users_lo:/app
+      - m2-cache:/root/.m2
+    ports:
+      - "18083:8080"
+    extra_hosts:
+      - "acb_mysql_db:172.21.0.2"
+    environment:
+      - ACB_JWT_EXPIRATION_HOURS=8
+
+  ACB_auth_lo:
+    image: acb-auth:dev
+    volumes:
+      - ./ACB_auth_lo:/app
+      - m2-cache:/root/.m2
+    ports:
+      - "18084:8080"
+    extra_hosts:
+      - "acb_mysql_db:172.21.0.2"
+
+volumes:
+  m2-cache:
+    external: true

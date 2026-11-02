@@ -12,7 +12,7 @@ Dashboard administrativo Next.js App Router con SSR y un BFF independiente TypeS
 - No se encontraron CRUD administrativos en los controladores locales revisados. El BFF declara esas capacidades no disponibles y la interfaz no inventa datos ni envía operaciones a endpoints supuestos. Geolocalización sigue pendiente de adaptar.
 - Las entradas SPA de Vite y React Router se retiraron con autorización. Vite permanece como herramienta de Vitest, no como servidor del dashboard.
 - No se modifican `adminACB`, `geolocaACB` ni `presentationACB`.
-- Docker, el proxy de entrada y CI siguen pendientes. No se presenta como despliegue de producción terminado.
+- Docker local está implementado y verificado con Docker Desktop Linux 29.9.2. No se presenta como despliegue de producción terminado.
 
 ## Desarrollo local
 
@@ -62,7 +62,21 @@ npm run build
 
 Los comandos incluyen los workspaces. `npm test` utiliza datos sintéticos y Redis simulado; incluye hidratación e interactividad del proveedor SSR. `npm run test:ssr` construye y arranca el servidor standalone real con un BFF de prueba: verifica HTML del login, estilos MUI, assets, rutas protegidas, solicitudes RSC, errores y dos identidades concurrentes sin filtración de JWT/cookies. No demuestra conectividad con auth o Redis reales ni sustituye una revisión visual en navegador.
 
-Para verificar persistencia Redis real, proporcionar un `BFF_TEST_REDIS_URL` dedicado y ejecutar `npm run test:integration`. Esa prueba crea y elimina únicamente sus propias sesiones aleatorias; no limpia bases ni escanea claves ajenas. Docker/Redis real siguen pendientes mientras Docker Desktop no tenga su motor activo.
+Para verificar persistencia Redis real, proporcionar un `BFF_TEST_REDIS_URL` dedicado y ejecutar `npm run test:integration`. Esa prueba crea y elimina únicamente sus propias sesiones aleatorias; no limpia bases ni escanea claves ajenas. Con la pila Compose activa, `redis://localhost:6379` apunta al Redis del proyecto.
+
+## Docker local
+
+Requiere Docker Desktop con el motor Linux. Copiar `.env.example` a `.env` y completar los secretos generados y `AUTH_BASE_URL`. La autenticación real necesita el servicio auth accesible desde los contenedores (`host.docker.internal` para un servicio del host).
+
+```sh
+docker compose up -d --build
+```
+
+Abrir `http://localhost:8080` (o el `PROXY_PORT` configurado). Caddy dirige `/bff/*` al BFF y el resto a Next.js, manteniendo un único origen. Redis es privado dentro de la red; solo se publica en `127.0.0.1:6379` para permitir `npm run test:integration` con `BFF_TEST_REDIS_URL=redis://localhost:6379`.
+
+El BFF se ejecuta en contenedor con `NODE_ENV=development` para aceptar el origen HTTP local: las cookies llevan `SameSite=Lax` sin `Secure`, válido únicamente en desarrollo. En producción se exige `PUBLIC_ORIGIN` HTTPS y proxy de confianza explícito.
+
+Verificado con Docker 29.9.2: imágenes de web y BFF compiladas, los cuatro servicios saludables, CSRF real emitido a través del proxy, redirección de rutas protegidas, sesiones cifradas JWE/A256GCM con TTL en Redis real y `npm run test:integration` pasando. El login real todavía depende de que el servicio auth esté disponible en `AUTH_BASE_URL`.
 
 ## Endpoints
 
