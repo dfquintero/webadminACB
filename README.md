@@ -9,7 +9,7 @@ Dashboard administrativo Next.js App Router con SSR y un BFF independiente TypeS
 - `packages/contracts`: DTOs y schemas públicos; no contiene tokens ni clientes privados.
 - Sesión y capacidades se consultan en servidor mediante la red interna del BFF, con cookies opacas y fetch sin caché. Se comprueba autorización en cada página protegida y en el BFF, no únicamente en el layout.
 - Solo la identidad pública y capacidades se hidratan en el navegador. No se entregan el JWT backend ni el identificador de cookie mediante props o HTML.
-- No se encontraron CRUD administrativos en los controladores locales revisados. El BFF declara esas capacidades no disponibles y la interfaz no inventa datos ni envía operaciones a endpoints supuestos. Geolocalización sigue pendiente de adaptar.
+- No se encontraron CRUD administrativos en los controladores locales revisados. El BFF declara esas capacidades no disponibles y la interfaz no inventa datos ni envía operaciones a endpoints supuestos. La geolocalización se integra mediante el servicio geoloca (ver más abajo).
 - Las entradas SPA de Vite y React Router se retiraron con autorización. Vite permanece como herramienta de Vitest, no como servidor del dashboard.
 - No se modifican `adminACB`, `geolocaACB` ni `presentationACB`.
 - Docker local está implementado y verificado con Docker Desktop Linux 29.9.2. No se presenta como despliegue de producción terminado.
@@ -62,7 +62,7 @@ npm run build
 
 Los comandos incluyen los workspaces. `npm test` utiliza datos sintéticos y Redis simulado; incluye hidratación e interactividad del proveedor SSR. `npm run test:ssr` construye y arranca el servidor standalone real con un BFF de prueba: verifica HTML del login, estilos MUI, assets, rutas protegidas, solicitudes RSC, errores y dos identidades concurrentes sin filtración de JWT/cookies. No demuestra conectividad con auth o Redis reales ni sustituye una revisión visual en navegador.
 
-Para verificar persistencia Redis real, proporcionar un `BFF_TEST_REDIS_URL` dedicado y ejecutar `npm run test:integration`. Esa prueba crea y elimina únicamente sus propias sesiones aleatorias; no limpia bases ni escanea claves ajenas. Con la pila Compose activa, `redis://localhost:6379` apunta al Redis del proyecto.
+Para verificar persistencia Redis real, proporcionar un `BFF_TEST_REDIS_URL` dedicado y ejecutar `npm run test:integration`. Esa prueba crea y elimina únicamente sus propias sesiones aleatorias; no limpia bases ni escanea claves ajenas. Con la pila Compose activa, `redis://localhost:6380` apunta al Redis del proyecto.
 
 ## Docker local
 
@@ -72,7 +72,7 @@ Requiere Docker Desktop con el motor Linux. Copiar `.env.example` a `.env` y com
 docker compose up -d --build
 ```
 
-Abrir `http://localhost:8080` (o el `PROXY_PORT` configurado). Caddy dirige `/bff/*` al BFF y el resto a Next.js, manteniendo un único origen. Redis es privado dentro de la red; solo se publica en `127.0.0.1:6379` para permitir `npm run test:integration` con `BFF_TEST_REDIS_URL=redis://localhost:6379`.
+Abrir `http://localhost:8080` (o el `PROXY_PORT` configurado). Caddy dirige `/bff/*` al BFF y el resto a Next.js, manteniendo un único origen. Redis es privado dentro de la red; solo se publica en `127.0.0.1:6380` para permitir `npm run test:integration` con `BFF_TEST_REDIS_URL=redis://localhost:6380`.
 
 El BFF se ejecuta en contenedor con `NODE_ENV=development` para aceptar el origen HTTP local: las cookies llevan `SameSite=Lax` sin `Secure`, válido únicamente en desarrollo. En producción se exige `PUBLIC_ORIGIN` HTTPS y proxy de confianza explícito.
 
@@ -80,7 +80,31 @@ Verificado con Docker 29.9.2: imágenes de web y BFF compiladas, los cuatro serv
 
 ## Integración admin_users
 
-Con `ADMIN_USERS_BASE_URL` configurado (origen del servicio `ACB_admin_users_lo`), el BFF expone `/bff/v1/students`, `/bff/v1/guides`, `/bff/v1/users` y `/bff/v1/search`, reenviando el JWT de la sesión cifrada en Redis — el navegador nunca lo ve. Capacidades habilitadas: `estudiantes` y `guias`. Estudiantes no tiene DELETE confirmado; la UI no lo ofrece. Rutas, asignaciones, asistencia, alertas, dashboard y geo siguen reportados como no disponibles hasta confirmar contrato.
+Con `ADMIN_USERS_BASE_URL` configurado (origen del servicio `ACB_admin_users_lo`), el BFF expone `/bff/v1/students`, `/bff/v1/guides`, `/bff/v1/users` y `/bff/v1/search`, reenviando el JWT de la sesión cifrada en Redis — el navegador nunca lo ve. Capacidades habilitadas: `estudiantes` y `guias`. Estudiantes no tiene DELETE confirmado; la UI no lo ofrece. Asignaciones, asistencia, alertas y dashboard siguen reportados como no disponibles hasta confirmar contrato.
+
+## Integración geoloca
+
+Con `GEO_BASE_URL` configurado (origen del servicio geoloca, `acb_path_lo`), el BFF expone:
+
+- `GET /bff/v1/geo/routes`
+- `GET /bff/v1/geo/routes/search?code=&route_code=`
+- `GET /bff/v1/geo/routes/:id`
+- `GET /bff/v1/geo/routes/:id/endpoints`
+- `GET /bff/v1/geo/meeting-points`
+- `POST /bff/v1/geo/imports/kmz` — multipart con un archivo `.kmz` de hasta 20 MB; requiere sesión, Origin permitido y `x-csrf-token`.
+
+Las rutas se leen sin JWT hacia geoloca; las operaciones de admin_users sí reenvían el bearer de la sesión. El importador de geoloca conserva únicamente puntos de encuentro (paradas), colegios e inicio/fin explícitos de cada ruta: la georreferenciación de estudiantes y los puntos de riesgo se descartan en origen. Capacidades habilitadas: `rutas` y `geo`.
+
+## Limitaciones actuales
+
+- Los servicios adminACB (`ACB_admin_users_lo`) solo exponen `POST /api/v1/auth/login`: los controladores de students, guides, users y search no están implementados, por lo que esas llamadas reciben 404 del upstream.
+- `admin_operation` no arranca: su migración Flyway usa sintaxis MySQL sobre PostgreSQL.
+- Asignaciones, asistencia, alertas y dashboard no tienen contrato backend; el BFF los reporta como no disponibles.
+- El login real requiere un usuario con rol MANAGER en `acb_auth_db`.
+
+## SSR y BFF
+
+Next.js lee la cookie opaca en servidor, llama a `BFF_INTERNAL_URL` (`/bff/v1/auth/session` y `/bff/v1/capabilities`) y cada página protegida aplica `requireAdmin`; el layout hidrata React Query con un QueryClient por solicitud. Las llamadas de datos del navegador van por `/bff/v1/*` a través del proxy; el JWT solo existe cifrado en Redis. Ver `docs/arquitectura.puml`.
 
 ## Endpoints
 

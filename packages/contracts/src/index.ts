@@ -182,3 +182,33 @@ export const geoRouteSchema = z.object({
 
 export type GeoMeetingPoint = z.infer<typeof geoMeetingPointSchema>;
 export type GeoRoute = z.infer<typeof geoRouteSchema>;
+
+export const geoRouteEndpointPointSchema = z.object({
+  meeting_point_id: z.string(),
+  name: z.string(),
+  longitude: z.number(),
+  latitude: z.number(),
+  source: z.string().nullable().optional(),
+  distance_m: z.number().nullable().optional(),
+}).loose();
+
+export const geoRouteEndpointsSchema = z.object({
+  route_id: z.string(),
+  status: z.string(),
+  start: geoRouteEndpointPointSchema.nullable().optional(),
+  end: geoRouteEndpointPointSchema.nullable().optional(),
+}).loose();
+
+export const geoImportResultSchema = z.object({
+  message: z.string().optional(),
+  saved_routes: z.number().int().nonnegative(),
+  saved_points: z.number().int().nonnegative(),
+  endpoints: z.object({
+    resolved: z.number().int().nonnegative(),
+    unresolved: z.number().int().nonnegative(),
+    not_applicable: z.number().int().nonnegative(),
+  }).loose().optional(),
+}).loose();
+
+export type GeoRouteEndpoints = z.infer<typeof geoRouteEndpointsSchema>;
+export type GeoImportResult = z.infer<typeof geoImportResultSchema>;

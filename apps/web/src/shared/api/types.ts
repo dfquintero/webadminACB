@@ -35,6 +35,7 @@ export const rutaResponse = z.object({
   code: z.string().nullable().optional(), routeCode: z.string().nullable().optional(),
   dayShift: z.string().nullable().optional(), endpointStatus: z.string().optional(),
   meetingPoints: z.number().int().nonnegative(), distanceKm: z.number().nonnegative().optional(),
+  meetingPointIds: z.array(z.string()).optional(),
 });
 export const asignacionResponse = asignacionSchema.extend({ id });
 export const alertaResponse = alertaSchema.extend({

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { geoRouteSchema } from '@acb/contracts';
+import { geoImportResultSchema, geoMeetingPointSchema, geoRouteEndpointsSchema, geoRouteSchema } from '@acb/contracts';
 import { apiClient } from './client';
 import { endpoints } from './endpoints';
 import { rutaResponse, type Ruta } from './types';
@@ -28,7 +28,22 @@ export const rutaApi = {
       dayShift: route.day_shift ?? null,
       endpointStatus: route.endpoint_status ?? 'unknown',
       meetingPoints: route.meeting_point_ids?.length ?? 0,
+      meetingPointIds: route.meeting_point_ids ?? [],
       distanceKm: route.geometry ? haversineKm(route.geometry.coordinates) : undefined,
     }));
+  },
+  getEndpoints: async (id: string, signal?: AbortSignal) => {
+    const { data } = await apiClient.get<unknown>(`${endpoints.rutas}/${encodeURIComponent(id)}/endpoints`, { signal });
+    return geoRouteEndpointsSchema.parse(data);
+  },
+  getMeetingPoints: async (signal?: AbortSignal) => {
+    const { data } = await apiClient.get<unknown>(endpoints.meetingPoints, { signal });
+    return z.array(geoMeetingPointSchema).parse(data);
+  },
+  importKmz: async (file: File) => {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    const { data } = await apiClient.post<unknown>('/geo/imports/kmz', form);
+    return geoImportResultSchema.parse(data);
   },
 };

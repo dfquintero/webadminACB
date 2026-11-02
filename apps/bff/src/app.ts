@@ -11,6 +11,7 @@ import { registerAuthRoutes, type Authenticate } from './modules/auth/routes.js'
 import { registerAdminUsersRoutes } from './modules/admin-users/routes.js';
 import { registerGeoRoutes } from './modules/geo/routes.js';
 import { createUpstream } from './upstreams/http.js';
+import multipart from '@fastify/multipart';
 
 type Dependencies = { store: SessionStore; authenticate: Authenticate; ready: () => Promise<boolean>; redis?: Redis; close?: () => Promise<void> };
 
@@ -52,6 +53,7 @@ export const buildApp = async (config: BffConfig, dependencies: Dependencies) =>
   });
   await app.register(csrf, { sessionPlugin: '@fastify/session', getToken: request => String(request.headers['x-csrf-token'] ?? ''), logLevel: 'warn' });
   await app.register(rateLimit, { global: false, redis: dependencies.redis, skipOnError: false });
+  await app.register(multipart, { limits: { fileSize: 20 * 1024 * 1024, files: 1 } });
 
   app.get('/health/live', async () => ({ status: 'ok' }));
   app.get('/health/ready', async (_request, reply) => {
@@ -60,6 +62,6 @@ export const buildApp = async (config: BffConfig, dependencies: Dependencies) =>
   });
   await registerAuthRoutes(app, dependencies.authenticate, secure, config.ADMIN_USERS_BASE_URL !== undefined, config.GEO_BASE_URL !== undefined);
   await registerAdminUsersRoutes(app, createUpstream(config.ADMIN_USERS_BASE_URL, config));
-  await registerGeoRoutes(app, createUpstream(config.GEO_BASE_URL, config));
+  await registerGeoRoutes(app, createUpstream(config.GEO_BASE_URL, config), config);
   return app;
 };

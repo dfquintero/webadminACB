@@ -1,0 +1,58 @@
+@startuml ACB_WebAdmin_Simple
+skinparam backgroundColor #1e1e1e
+skinparam defaultFontColor #ffffff
+skinparam componentStyle rectangle
+skinparam ArrowColor #e53935
+skinparam ArrowFontColor #e53935
+skinparam rectangle {
+  BorderColor #9e9e9e
+  BorderStyle dashed
+  BackgroundColor transparent
+}
+skinparam database {
+  BorderColor #9e9e9e
+  BackgroundColor #2a2a2a
+}
+
+component "ACB_WebAdmin_Fe" #2b2005 {
+  component "Web (SSR)" as Web #2b2005 {
+    rectangle "Presentation" as WP
+    rectangle "Logic" as WL
+    rectangle "Data Access" as WD
+  }
+  component "BFF" as Bff #2b2005 {
+    rectangle "Presentation" as BP
+    rectangle "Logic" as BL
+    rectangle "Data Access" as BD
+  }
+  database "Redis\n(sessions)" as Redis
+}
+
+component "ACB_Gateway_Lo" as Gateway #1f2b1f
+
+package "Logic Tier" {
+  component "ACB_Auth_Lo" as Auth #173a4a
+  component "ACB_Users_Lo" as Users #173a4a
+  component "ACB_Operation_Lo" as Operation #173a4a
+  component "ACB_Routes_Lo" as Routes #173a4a
+  component "ACB_Paths_Lo" as Paths #173a4a
+}
+
+WP -down-> WL
+WL -down-> WD
+WD -right-> BP : Allowed-to-use
+BP -down-> BL
+BL -down-> BD
+BD -right-> Redis : Allowed-to-use
+BD -down-> Gateway : Allowed-to-use
+
+Gateway -down-> Auth
+Gateway -down-> Users
+Gateway -down-> Operation
+Gateway -down-> Routes
+Gateway -down-> Paths
+
+BD .[#ff9800].> Auth : temporary
+BD .[#ff9800].> Users : temporary
+BD .[#ff9800].> Paths : temporary
+@enduml
