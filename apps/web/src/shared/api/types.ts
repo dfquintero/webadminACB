@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { guideDtoSchema, studentDtoSchema } from '@acb/contracts';
 import { estudianteSchema } from '../config/schemas/estudiante';
 import { guiaSchema } from '../config/schemas/guia';
-import { rutaSchema } from '../config/schemas/ruta';
 import { asignacionSchema } from '../config/schemas/asignacion';
 import { alertaSchema } from '../config/schemas/alerta';
 
@@ -31,7 +30,12 @@ export const guiaResponse = guideDtoSchema.transform(dto => ({
   email: dto.email ?? '',
   zone: dto.zone ?? '',
 }));
-export const rutaResponse = rutaSchema.extend({ id });
+export const rutaResponse = z.object({
+  id: z.string(), name: z.string(),
+  code: z.string().nullable().optional(), routeCode: z.string().nullable().optional(),
+  dayShift: z.string().nullable().optional(), endpointStatus: z.string().optional(),
+  meetingPoints: z.number().int().nonnegative(), distanceKm: z.number().nonnegative().optional(),
+});
 export const asignacionResponse = asignacionSchema.extend({ id });
 export const alertaResponse = alertaSchema.extend({
   id, fechaEnvio: z.string(), estado: z.enum(['pendiente', 'enviada', 'fallida']),
@@ -47,7 +51,6 @@ export type EstudianteFormData = z.infer<typeof estudianteSchema>;
 export type Estudiante = z.infer<typeof estudianteResponse>;
 export type GuiaFormData = z.infer<typeof guiaSchema>;
 export type Guia = z.infer<typeof guiaResponse>;
-export type RutaFormData = z.infer<typeof rutaSchema>;
 export type Ruta = z.infer<typeof rutaResponse>;
 export type AsignacionFormData = z.infer<typeof asignacionSchema>;
 export type Asignacion = z.infer<typeof asignacionResponse>;

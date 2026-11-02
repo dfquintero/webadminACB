@@ -158,3 +158,27 @@ export type LoginInput = z.infer<typeof loginInputSchema>;
 export type SessionUser = z.infer<typeof sessionUserSchema>;
 export type SessionResponse = z.infer<typeof sessionResponseSchema>;
 export type ApiError = z.infer<typeof apiErrorSchema>;
+
+const lonLat = z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]);
+
+export const geoMeetingPointSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  kind: z.string(),
+  description: z.string().nullable().optional(),
+  location: z.object({ type: z.literal('Point'), coordinates: lonLat }).loose(),
+}).loose();
+
+export const geoRouteSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  route_code: z.string().nullable().optional(),
+  code: z.string().nullable().optional(),
+  day_shift: z.string().nullable().optional(),
+  endpoint_status: z.string().optional(),
+  geometry: z.object({ type: z.literal('LineString'), coordinates: z.array(lonLat) }).loose().optional(),
+  meeting_point_ids: z.array(z.string()).optional(),
+}).loose();
+
+export type GeoMeetingPoint = z.infer<typeof geoMeetingPointSchema>;
+export type GeoRoute = z.infer<typeof geoRouteSchema>;

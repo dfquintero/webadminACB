@@ -1,7 +1,7 @@
 export const endpoints = {
   auth: { login: '/auth/login', logout: '/auth/logout', me: '/auth/session' },
   estudiantes: '/students',
-  rutas: '/rutas',
+  rutas: '/geo/routes',
   guias: '/guides',
   usuarios: '/users',
   asignaciones: '/asignaciones',

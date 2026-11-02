@@ -9,6 +9,7 @@ import type { BffConfig } from './config.js';
 import { ApiFault } from './errors.js';
 import { registerAuthRoutes, type Authenticate } from './modules/auth/routes.js';
 import { registerAdminUsersRoutes } from './modules/admin-users/routes.js';
+import { registerGeoRoutes } from './modules/geo/routes.js';
 import { createUpstream } from './upstreams/http.js';
 
 type Dependencies = { store: SessionStore; authenticate: Authenticate; ready: () => Promise<boolean>; redis?: Redis; close?: () => Promise<void> };
@@ -57,7 +58,8 @@ export const buildApp = async (config: BffConfig, dependencies: Dependencies) =>
     const ready = await dependencies.ready().catch(() => false);
     return reply.code(ready ? 200 : 503).send({ status: ready ? 'ready' : 'unavailable' });
   });
-  await registerAuthRoutes(app, dependencies.authenticate, secure, config.ADMIN_USERS_BASE_URL !== undefined);
+  await registerAuthRoutes(app, dependencies.authenticate, secure, config.ADMIN_USERS_BASE_URL !== undefined, config.GEO_BASE_URL !== undefined);
   await registerAdminUsersRoutes(app, createUpstream(config.ADMIN_USERS_BASE_URL, config));
+  await registerGeoRoutes(app, createUpstream(config.GEO_BASE_URL, config));
   return app;
 };

@@ -13,6 +13,7 @@ const schema = z.object({
   PUBLIC_ORIGIN: origin,
   AUTH_BASE_URL: origin,
   ADMIN_USERS_BASE_URL: origin.optional(),
+  GEO_BASE_URL: origin.optional(),
   REDIS_URL: z.url().refine(value => URL.canParse(value) && ['redis:', 'rediss:'].includes(new URL(value).protocol)),
   SESSION_SIGNING_SECRET: z.string().min(48).max(256),
   SESSION_ENCRYPTION_KEY: z.string().regex(/^[A-Za-z0-9_-]+$/).refine(value => Buffer.from(value, 'base64url').length === 32),
