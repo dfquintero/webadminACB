@@ -3,36 +3,29 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "workspaces": ["apps/web", "apps/bff", "packages/contracts"],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "npm run build --workspace @acb/contracts && npm run dev --workspace @acb/web",
+    "dev:bff": "npm run build --workspace @acb/contracts && npm run dev --workspace @acb/bff",
+    "build": "npm run build --workspace @acb/contracts && npm run build --workspace @acb/bff && npm run build --workspace @acb/web",
     "lint": "oxlint",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@hookform/resolvers": "^7.0.0",
-    "@mui/icons-material": "^9.5.0",
-    "@mui/material": "^9.5.0",
-    "@tanstack/react-query": "^5.105.1",
-    "@tanstack/react-query-devtools": "^5.105.1",
-    "axios": "^1.21.0",
-    "date-fns": "^4.4.0",
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1",
-    "react-hook-form": "^7.91.0",
-    "react-router-dom": "^7.18.5",
-    "recharts": "^3.10.1",
-    "zod": "^4.6.7"
+    "typecheck": "npm run build --workspace @acb/contracts && npm run typecheck --workspaces",
+    "test": "npm run build --workspace @acb/contracts && npm run test --workspaces",
+    "test:integration": "npm run build --workspace @acb/contracts && npm run test:integration --workspace @acb/bff",
+    "test:ssr": "npm run build --workspace @acb/contracts && npm run test:ssr --workspace @acb/web",
+    "preview": "npm run preview --workspace @acb/web"
   },
   "devDependencies": {
+    "@testing-library/dom": "10.4.1",
+    "@testing-library/react": "16.3.0",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "jsdom": "26.1.0",
     "oxlint": "^1.89.0",
     "typescript": "~7.0.2",
-    "vite": "^8.3.5"
+    "vite": "^8.3.5",
+    "vitest": "4.1.12"
   }
 }

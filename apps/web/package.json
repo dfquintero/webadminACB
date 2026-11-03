@@ -1,0 +1,38 @@
+{
+  "name": "@acb/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build && node scripts/prepare-standalone.mjs",
+    "start": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/start.mjs",
+    "preview": "npm run start",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:ssr": "npm run build && node --test test-ssr/ssr.test.mjs",
+    "lint": "oxlint src"
+  },
+  "dependencies": {
+    "@acb/contracts": "0.1.0",
+    "@emotion/cache": "11.14.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/server": "11.11.0",
+    "@emotion/styled": "^11.14.1",
+    "@hookform/resolvers": "^7.0.0",
+    "@mui/icons-material": "^9.5.0",
+    "@mui/material": "^9.5.0",
+    "@mui/material-nextjs": "9.5.0",
+    "@tanstack/react-query": "^5.105.1",
+    "@tanstack/react-query-devtools": "^5.105.1",
+    "axios": "^1.21.0",
+    "date-fns": "^4.4.0",
+    "next": "16.4.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-hook-form": "^7.91.0",
+    "recharts": "^3.10.1",
+    "server-only": "0.0.1",
+    "zod": "^4.6.7"
+  }
+}

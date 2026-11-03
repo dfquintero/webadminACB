@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:ssr
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+      - run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build web image
+        run: docker build -f apps/web/Dockerfile .
+      - name: Build BFF image
+        run: docker build -f apps/bff/Dockerfile .
+      - name: Validate compose
+        run: |
+          PUBLIC_ORIGIN=http://localhost:8080 \
+          AUTH_BASE_URL=http://localhost:8084 \
+          SESSION_SIGNING_SECRET=test-signing-secret-test-signing-secret-test-signi \
+          SESSION_ENCRYPTION_KEY=6OiBwdDw-hJjZZn1pt7n9PmAEzlv4cFGurW9blIE2rU \
+          docker compose config --quiet
