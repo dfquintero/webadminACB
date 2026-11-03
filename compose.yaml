@@ -47,6 +47,10 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        BFF_INTERNAL_URL: http://bff:3001
+    ports:
+      - "${WEB_PORT:-8080}:3000"
     environment:
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:8080}
       BFF_INTERNAL_URL: http://bff:3001
@@ -58,17 +62,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-    restart: unless-stopped
-
-  proxy:
-    image: caddy:2.10.2-alpine
-    volumes:
-      - ./infra/proxy/Caddyfile:/etc/caddy/Caddyfile:ro
-    ports:
-      - "${PROXY_PORT:-8080}:80"
-    depends_on:
-      web:
-        condition: service_healthy
     restart: unless-stopped
 
 volumes:

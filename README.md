@@ -44,7 +44,7 @@ npm run preview
 
 El build genera `apps/web/.next/standalone`, incluyendo los archivos estáticos y public. El arranque utiliza su servidor mínimo, no `next start`. `PORT` y `HOSTNAME` permiten configurar su escucha. La configuración privada se recibe en ejecución; el comando de arranque local carga opcionalmente `.env` y `.env.local` de `apps/web`.
 
-En producción, la entrada del mismo origen debe dirigir `/bff/v1/*` al BFF y las páginas a Next.js. Ese proxy pertenece a la fase Docker pendiente: ejecutar únicamente la vista previa no habilita las mutaciones del navegador contra el BFF. No se crea un segundo BFF en Route Handlers de Next.js.
+Next.js reenvía `/bff/*` al BFF con un `rewrite` de destino fijo (`BFF_INTERNAL_URL`, fijado en tiempo de build), tanto en desarrollo como en Docker; así se conserva un único origen sin proxy adicional. No se crea un segundo BFF en Route Handlers de Next.js. En producción, TLS lo aporta el gateway/ingress de la plataforma.
 
 Para el BFF de producción se exige `PUBLIC_ORIGIN` HTTPS. Detrás de terminación TLS, configurar `TRUSTED_PROXY` con direcciones conocidas, nunca confianza universal. Redis debe permanecer privado, con ACL/credenciales y TLS cuando corresponda. No copiar claves de firma JWT de los servicios existentes.
 
@@ -72,11 +72,11 @@ Requiere Docker Desktop con el motor Linux. Copiar `.env.example` a `.env` y com
 docker compose up -d --build
 ```
 
-Abrir `http://localhost:8080` (o el `PROXY_PORT` configurado). Caddy dirige `/bff/*` al BFF y el resto a Next.js, manteniendo un único origen. Redis es privado dentro de la red; solo se publica en `127.0.0.1:6380` para permitir `npm run test:integration` con `BFF_TEST_REDIS_URL=redis://localhost:6380`.
+Abrir `http://localhost:8080` (o el `WEB_PORT` configurado). Se despliegan tres contenedores (web, bff, redis); Next.js publica el puerto y reenvía `/bff/*` al BFF, manteniendo un único origen. Redis es privado dentro de la red; solo se publica en `127.0.0.1:6380` para permitir `npm run test:integration` con `BFF_TEST_REDIS_URL=redis://localhost:6380`.
 
 El BFF se ejecuta en contenedor con `NODE_ENV=development` para aceptar el origen HTTP local: las cookies llevan `SameSite=Lax` sin `Secure`, válido únicamente en desarrollo. En producción se exige `PUBLIC_ORIGIN` HTTPS y proxy de confianza explícito.
 
-Verificado con Docker 29.9.2: imágenes de web y BFF compiladas, los cuatro servicios saludables, CSRF real emitido a través del proxy, redirección de rutas protegidas, sesiones cifradas JWE/A256GCM con TTL en Redis real y `npm run test:integration` pasando. El login real todavía depende de que el servicio auth esté disponible en `AUTH_BASE_URL`.
+Verificado con Docker 29.9.2: imágenes de web y BFF compiladas, los servicios saludables, CSRF real emitido a través del origen público, redirección de rutas protegidas, sesiones cifradas JWE/A256GCM con TTL en Redis real y `npm run test:integration` pasando. El login real todavía depende de que el servicio auth esté disponible en `AUTH_BASE_URL`.
 
 ## Integración admin_users
 
@@ -104,7 +104,7 @@ Las rutas se leen sin JWT hacia geoloca; las operaciones de admin_users sí reen
 
 ## SSR y BFF
 
-Next.js lee la cookie opaca en servidor, llama a `BFF_INTERNAL_URL` (`/bff/v1/auth/session` y `/bff/v1/capabilities`) y cada página protegida aplica `requireAdmin`; el layout hidrata React Query con un QueryClient por solicitud. Las llamadas de datos del navegador van por `/bff/v1/*` a través del proxy; el JWT solo existe cifrado en Redis. Ver `docs/arquitectura.puml`.
+Next.js lee la cookie opaca en servidor, llama a `BFF_INTERNAL_URL` (`/bff/v1/auth/session` y `/bff/v1/capabilities`) y cada página protegida aplica `requireAdmin`; el layout hidrata React Query con un QueryClient por solicitud. Las llamadas de datos del navegador van por `/bff/v1/*` (reenviadas por Next.js al BFF); el JWT solo existe cifrado en Redis. Ver `docs/arquitectura.puml`.
 
 ## Endpoints
 

@@ -8,7 +8,9 @@ COPY packages/contracts/package.json packages/contracts/
 RUN npm ci --ignore-scripts
 
 FROM deps AS build
-ENV NEXT_TELEMETRY_DISABLED=1
+ARG BFF_INTERNAL_URL=http://bff:3001
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    BFF_INTERNAL_URL=${BFF_INTERNAL_URL}
 COPY packages/contracts packages/contracts
 COPY apps/web apps/web
 RUN npm run build --workspace @acb/contracts && npm run build --workspace @acb/web
