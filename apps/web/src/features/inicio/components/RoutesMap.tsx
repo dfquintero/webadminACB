@@ -19,7 +19,7 @@ type Props = { routes: GeoRoute[]; points: GeoMeetingPoint[]; height?: string; n
 
 export const RoutesMap = ({ routes, points, height = '70vh', numbered = false }: Props) => {
   const bounds = routes.flatMap(route => route.geometry?.coordinates.map(toLatLng) ?? []);
-  let order = 0;
+  const labels = new Map(points.filter(point => point.kind !== 'school').map((point, index) => [point._id, String(index + 1)]));
   return <MapContainer center={[4.65, -74.1]} zoom={12} style={{ height, width: '100%', borderRadius: 8 }}>
     <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
     <FitBounds points={bounds} />
@@ -29,7 +29,7 @@ export const RoutesMap = ({ routes, points, height = '70vh', numbered = false }:
       </Polyline>)}
     {points.map(point => {
       const school = point.kind === 'school';
-      const label = numbered && !school ? String(order += 1) : null;
+      const label = numbered ? labels.get(point._id) : undefined;
       return <CircleMarker key={point._id} center={toLatLng(point.location.coordinates)} radius={school ? 9 : numbered ? 7 : 5}
         pathOptions={{ color: school ? '#b71c1c' : '#0d47a1', fillOpacity: 0.85 }}>
         {label && <Tooltip permanent direction="top" offset={[0, -6]}>{label}</Tooltip>}

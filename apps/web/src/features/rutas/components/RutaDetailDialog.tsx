@@ -11,7 +11,7 @@ const RoutesMap = dynamic(() => import('@/features/inicio/components/RoutesMap')
 
 const Field = ({ label, value }: { label: string; value: React.ReactNode }) => <Box>
   <Typography variant="caption" color="text.secondary">{label}</Typography>
-  <Typography variant="body2" fontWeight={500}>{value ?? '—'}</Typography>
+  <Typography variant="body2" sx={{ fontWeight: 500 }}>{value ?? '—'}</Typography>
 </Box>;
 
 export const RutaDetailDialog = ({ ruta, onClose }: { ruta: Ruta | null; onClose: () => void }) => {
