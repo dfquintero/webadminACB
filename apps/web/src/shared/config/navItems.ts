@@ -1,7 +1,7 @@
-import { Dashboard, People, DirectionsBike, Badge, Assignment, CheckCircle, Notifications } from '@mui/icons-material';
+import { Map as MapIcon, People, DirectionsBike, Badge, Assignment, CheckCircle, Notifications } from '@mui/icons-material';
 
 export const navItems = [
-  { path: '/', label: 'Dashboard', icon: Dashboard },
+  { path: '/', label: 'Inicio', icon: MapIcon },
   { path: '/estudiantes', label: 'Estudiantes', icon: People },
   { path: '/rutas', label: 'Rutas', icon: DirectionsBike },
   { path: '/guias', label: 'Guías', icon: Badge },

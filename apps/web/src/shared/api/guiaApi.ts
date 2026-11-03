@@ -17,7 +17,7 @@ export const guiaApi = {
   create: async (values: GuiaFormData): Promise<void> => {
     const v = guiaSchema.parse(values);
     await apiClient.post(endpoints.guias, {
-      user: { documentType: v.documentType, documentNumber: v.documentNumber, name: v.name, address: v.address || undefined, phone: v.phone || undefined },
+      user: { documentType: v.documentType, documentNumber: v.documentNumber, name: v.name, address: v.address, phone: v.phone },
       guide: { contractNumber: v.contractNumber, email: v.email, zone: v.zone },
     });
   },

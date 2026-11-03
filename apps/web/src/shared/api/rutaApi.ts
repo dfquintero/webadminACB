@@ -32,6 +32,10 @@ export const rutaApi = {
       distanceKm: route.geometry ? haversineKm(route.geometry.coordinates) : undefined,
     }));
   },
+  getGeoRoutes: async (signal?: AbortSignal) => {
+    const { data } = await apiClient.get<unknown>(endpoints.rutas, { signal });
+    return z.array(geoRouteSchema).parse(data);
+  },
   getEndpoints: async (id: string, signal?: AbortSignal) => {
     const { data } = await apiClient.get<unknown>(`${endpoints.rutas}/${encodeURIComponent(id)}/endpoints`, { signal });
     return geoRouteEndpointsSchema.parse(data);

@@ -82,14 +82,16 @@ export const pagedSchema = <T extends z.ZodType>(item: T) => z.object({
 
 export const documentTypeSchema = z.enum(['CC', 'CE', 'NUIP', 'PPT', 'PPE']);
 
+export type DocumentType = z.infer<typeof documentTypeSchema>;
+
 export const relationshipSchema = z.enum(['FATHER', 'MOTHER', 'UNCLE_AUNT', 'RELATIVE', 'NEIGHBOR']);
 
 const personInputSchema = z.object({
   documentType: documentTypeSchema,
   documentNumber: z.string().trim().min(1).max(32),
   name: z.string().trim().min(1).max(160),
-  address: z.string().trim().max(200).optional(),
-  phone: z.string().trim().max(20).optional(),
+  address: z.string().trim().min(1).max(200),
+  phone: z.string().trim().min(1).max(25),
 }).strict();
 
 export const createStudentInputSchema = z.object({

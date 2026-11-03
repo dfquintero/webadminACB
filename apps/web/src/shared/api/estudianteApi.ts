@@ -17,7 +17,7 @@ export const estudianteApi = {
   create: async (values: EstudianteFormData): Promise<void> => {
     const v = estudianteSchema.parse(values);
     await apiClient.post(endpoints.estudiantes, {
-      user: { documentType: v.documentType, documentNumber: v.documentNumber, name: v.name, address: v.address || undefined, phone: v.phone || undefined },
+      user: { documentType: v.documentType, documentNumber: v.documentNumber, name: v.name, address: v.address, phone: v.phone },
       student: { grade: v.grade, schoolShift: v.schoolShift, section: v.section, schoolId: v.schoolId },
     });
   },
