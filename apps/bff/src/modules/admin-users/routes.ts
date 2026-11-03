@@ -1,9 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import {
-  assignGuardianInputSchema, createGuideInputSchema, createStudentInputSchema, createUserInputSchema,
+  assignGuardianInputSchema, createGuideInputSchema, createStudentInputSchema,
   guideDtoSchema, pagedSchema, searchParamsSchema, studentDtoSchema, updateGuideInputSchema,
-  updateStudentInputSchema, updateUserInputSchema, userDtoSchema,
+  updateStudentInputSchema,
 } from '@acb/contracts';
 import { ApiFault } from '../../errors.js';
 import { requireSession } from '../auth/session.js';
@@ -28,8 +28,10 @@ export const registerAdminUsersRoutes = async (app: FastifyInstance, call: Upstr
     const data = await send(request, 'GET', `/students?page=${page}&size=${size}`);
     return pagedSchema(studentDtoSchema).parse(data ?? { content: [] });
   });
-  app.post('/bff/v1/students', csrf, async request =>
-    send(request, 'POST', '/students', parse(createStudentInputSchema, request.body)));
+  app.post('/bff/v1/students', csrf, async request => {
+    const input = parse(createStudentInputSchema, request.body);
+    return send(request, 'POST', '/students', { ...input, user: { ...input.user, role: 'STUDENT' } });
+  });
   app.get('/bff/v1/students/:id', async request =>
     studentDtoSchema.parse(await send(request, 'GET', `/students/${parse(idSchema, (request.params as { id: string }).id)}`)));
   app.put('/bff/v1/students/:id', csrf, async request =>
@@ -48,28 +50,14 @@ export const registerAdminUsersRoutes = async (app: FastifyInstance, call: Upstr
     const data = await send(request, 'GET', `/guides?page=${page}&size=${size}`);
     return pagedSchema(guideDtoSchema).parse(data ?? { content: [] });
   });
-  app.post('/bff/v1/guides', csrf, async request =>
-    send(request, 'POST', '/guides', parse(createGuideInputSchema, request.body)));
+  app.post('/bff/v1/guides', csrf, async request => {
+    const input = parse(createGuideInputSchema, request.body);
+    return send(request, 'POST', '/guides', { ...input, user: { ...input.user, role: 'GUIDE' } });
+  });
   app.get('/bff/v1/guides/:id', async request =>
     guideDtoSchema.parse(await send(request, 'GET', `/guides/${parse(idSchema, (request.params as { id: string }).id)}`)));
   app.put('/bff/v1/guides/:id', csrf, async request =>
     send(request, 'PUT', `/guides/${parse(idSchema, (request.params as { id: string }).id)}`, parse(updateGuideInputSchema, request.body)));
-  app.delete('/bff/v1/guides/:id', csrf, async request =>
-    send(request, 'DELETE', `/guides/${parse(idSchema, (request.params as { id: string }).id)}`));
-
-  app.get('/bff/v1/users', async request => {
-    const { page = 0, size = 10 } = parse(pageSchema, request.query ?? {});
-    const data = await send(request, 'GET', `/users?page=${page}&size=${size}`);
-    return pagedSchema(userDtoSchema).parse(data ?? { content: [] });
-  });
-  app.post('/bff/v1/users', csrf, async request =>
-    send(request, 'POST', '/users', parse(createUserInputSchema, request.body)));
-  app.get('/bff/v1/users/:id', async request =>
-    userDtoSchema.parse(await send(request, 'GET', `/users/${parse(idSchema, (request.params as { id: string }).id)}`)));
-  app.put('/bff/v1/users/:id', csrf, async request =>
-    send(request, 'PUT', `/users/${parse(idSchema, (request.params as { id: string }).id)}`, parse(updateUserInputSchema, request.body)));
-  app.delete('/bff/v1/users/:id', csrf, async request =>
-    send(request, 'DELETE', `/users/${parse(idSchema, (request.params as { id: string }).id)}`));
 
   app.get('/bff/v1/search', async request => {
     const { type, number } = parse(searchParamsSchema, request.query ?? {});

@@ -9,4 +9,5 @@ export const estudianteDefault: EstudianteFormData = {
   grade: '',
   schoolShift: 'Mañana',
   section: '',
+  schoolId: 0,
 };

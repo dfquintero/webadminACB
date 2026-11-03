@@ -9,7 +9,7 @@ import { guiasColumns } from '@/shared/config/columns/guias';
 import type { Guia, GuiaFormData } from '@/shared/api/types';
 
 export const GuiasPage = () => {
-  const { guias, isLoading, error, create, update, remove } = useGuias();
+  const { guias, isLoading, error, create, update } = useGuias();
   const { term, setTerm, filtered } = useFilteredData(guias ?? [], ['name', 'documentNumber', 'contractNumber', 'zone']);
   const { open, editingItem, handleOpen, handleClose } = useFormDialog<Guia>();
   const submit = async (data: GuiaFormData) => {
@@ -17,7 +17,7 @@ export const GuiasPage = () => {
     else await create.mutateAsync(data);
   };
   return <>
-    <PageLayout<Guia> title="Guías" data={filtered} columns={guiasColumns} searchTerm={term} onSearchChange={setTerm} onAdd={() => handleOpen()} onEdit={handleOpen} onDelete={remove.mutateAsync} isLoading={isLoading} error={error} />
+    <PageLayout<Guia> title="Guías" data={filtered} columns={guiasColumns} searchTerm={term} onSearchChange={setTerm} onAdd={() => handleOpen()} onEdit={handleOpen} isLoading={isLoading} error={error} />
     <GuiaForm open={open} onClose={handleClose} onSubmit={submit} initialData={editingItem} />
   </>;
 };

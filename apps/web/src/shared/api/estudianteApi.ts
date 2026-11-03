@@ -18,14 +18,13 @@ export const estudianteApi = {
     const v = estudianteSchema.parse(values);
     await apiClient.post(endpoints.estudiantes, {
       user: { documentType: v.documentType, documentNumber: v.documentNumber, name: v.name, address: v.address || undefined, phone: v.phone || undefined },
-      student: { grade: v.grade, schoolShift: v.schoolShift, section: v.section },
+      student: { grade: v.grade, schoolShift: v.schoolShift, section: v.section, schoolId: v.schoolId },
     });
   },
   update: async (id: string, values: EstudianteFormData): Promise<void> => {
     const v = estudianteSchema.parse(values);
     await apiClient.put(`${endpoints.estudiantes}/${encodeURIComponent(id)}`, {
-      name: v.name, address: v.address || undefined, phone: v.phone || undefined,
-      grade: v.grade, schoolShift: v.schoolShift, section: v.section,
+      grade: v.grade, schoolShift: v.schoolShift, section: v.section, schoolId: v.schoolId,
     });
   },
   delete: async (): Promise<void> => {

@@ -7,9 +7,9 @@ export const loginInputSchema = z.object({
 
 export const sessionUserSchema = z.object({
   id: z.union([z.string().min(1), z.number().int().nonnegative()]).transform(String),
-  name: z.string().min(1),
+  name: z.string().optional(),
   role: z.literal('MANAGER'),
-  zone: z.string().nullable(),
+  zone: z.string().nullable().optional(),
 });
 
 export const sessionResponseSchema = z.object({
@@ -49,7 +49,9 @@ export const studentDtoSchema = z.object({
 }).loose();
 
 export const guideDtoSchema = z.object({
-  userId: z.number().int(),
+  guideId: z.number().int(),
+  userId: z.number().int().optional(),
+  role: z.string().optional(),
   documentType: z.string(),
   documentNumber: z.string(),
   name: z.string(),
@@ -78,8 +80,12 @@ export const pagedSchema = <T extends z.ZodType>(item: T) => z.object({
   pageable: z.unknown().optional(),
 }).loose();
 
+export const documentTypeSchema = z.enum(['CC', 'CE', 'NUIP', 'PPT', 'PPE']);
+
+export const relationshipSchema = z.enum(['FATHER', 'MOTHER', 'UNCLE_AUNT', 'RELATIVE', 'NEIGHBOR']);
+
 const personInputSchema = z.object({
-  documentType: z.string().trim().min(1).max(16),
+  documentType: documentTypeSchema,
   documentNumber: z.string().trim().min(1).max(32),
   name: z.string().trim().min(1).max(160),
   address: z.string().trim().max(200).optional(),
@@ -92,17 +98,15 @@ export const createStudentInputSchema = z.object({
     grade: z.string().trim().min(1).max(32),
     schoolShift: z.string().trim().min(1).max(32),
     section: z.string().trim().min(1).max(16),
-    schoolId: z.number().int().positive().optional(),
+    schoolId: z.number().int().positive(),
   }).strict(),
 }).strict();
 
 export const updateStudentInputSchema = z.object({
-  name: z.string().trim().min(1).max(160),
-  address: z.string().trim().max(200).optional(),
-  phone: z.string().trim().max(20).optional(),
   grade: z.string().trim().min(1).max(32),
   schoolShift: z.string().trim().min(1).max(32),
   section: z.string().trim().min(1).max(16),
+  schoolId: z.number().int().positive(),
 }).strict();
 
 export const createGuideInputSchema = z.object({
@@ -115,9 +119,6 @@ export const createGuideInputSchema = z.object({
 }).strict();
 
 export const updateGuideInputSchema = z.object({
-  name: z.string().trim().min(1).max(160),
-  address: z.string().trim().max(200).optional(),
-  phone: z.string().trim().max(20).optional(),
   contractNumber: z.string().trim().min(1).max(32),
   email: z.email().max(160),
   zone: z.string().trim().min(1).max(64),
@@ -133,7 +134,7 @@ export const updateUserInputSchema = personInputSchema.extend({
 
 export const assignGuardianInputSchema = z.object({
   guardianId: z.number().int().positive(),
-  relationship: z.string().trim().min(1).max(32),
+  relationship: relationshipSchema,
   isPrimary: z.boolean(),
 }).strict();
 

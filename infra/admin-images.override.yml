@@ -30,7 +30,7 @@ services:
     ports:
       - "18082:8080"
     extra_hosts:
-      - "acb_mysql_db:172.21.0.2"
+      - "acb_mysql_db:172.21.0.3"
     environment:
       - ACB_JWT_EXPIRATION_HOURS=8
 
@@ -42,7 +42,7 @@ services:
     ports:
       - "18083:8080"
     extra_hosts:
-      - "acb_mysql_db:172.21.0.2"
+      - "acb_mysql_db:172.21.0.3"
     environment:
       - ACB_JWT_EXPIRATION_HOURS=8
 
@@ -54,7 +54,7 @@ services:
     ports:
       - "18084:8080"
     extra_hosts:
-      - "acb_mysql_db:172.21.0.2"
+      - "acb_mysql_db:172.21.0.3"
 
 volumes:
   m2-cache:

@@ -1,5 +1,7 @@
 import { z } from 'zod';
-import { guideDtoSchema, studentDtoSchema } from '@acb/contracts';
+import { documentTypeSchema, guideDtoSchema, studentDtoSchema } from '@acb/contracts';
+
+const docType = (value: string) => documentTypeSchema.catch('CC').parse(value);
 import { estudianteSchema } from '../config/schemas/estudiante';
 import { guiaSchema } from '../config/schemas/guia';
 import { asignacionSchema } from '../config/schemas/asignacion';
@@ -8,7 +10,7 @@ import { alertaSchema } from '../config/schemas/alerta';
 const id = z.union([z.string().min(1), z.number().int().nonnegative()]).transform(String);
 export const estudianteResponse = studentDtoSchema.transform(dto => ({
   id: String(dto.userId),
-  documentType: dto.documentType,
+  documentType: docType(dto.documentType),
   documentNumber: dto.documentNumber,
   name: dto.name,
   address: dto.address ?? '',
@@ -20,8 +22,8 @@ export const estudianteResponse = studentDtoSchema.transform(dto => ({
   guardians: dto.guardians ?? [],
 }));
 export const guiaResponse = guideDtoSchema.transform(dto => ({
-  id: String(dto.userId),
-  documentType: dto.documentType,
+  id: String(dto.guideId ?? dto.userId),
+  documentType: docType(dto.documentType),
   documentNumber: dto.documentNumber,
   name: dto.name,
   address: dto.address ?? '',

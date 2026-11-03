@@ -18,6 +18,6 @@ export const EstudiantesPage = () => {
   };
   return <>
     <PageLayout<Estudiante> title="Estudiantes" data={filtered} columns={estudiantesColumns} searchTerm={term} onSearchChange={setTerm} onAdd={() => handleOpen()} onEdit={handleOpen}  isLoading={isLoading} error={error} />
-    <EstudianteForm open={open} onClose={handleClose} onSubmit={submit} initialData={editingItem} />
+    <EstudianteForm open={open} onClose={handleClose} onSubmit={submit} initialData={editingItem && { ...editingItem, schoolId: editingItem.schoolId ?? 0 }} />
   </>;
 };

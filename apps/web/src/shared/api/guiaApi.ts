@@ -3,6 +3,7 @@ import { apiClient } from './client';
 import { endpoints } from './endpoints';
 import { guiaResponse, type Guia, type GuiaFormData } from './types';
 import { guiaSchema } from '../config/schemas/guia';
+import { FeatureUnavailableError } from '../hooks/useCapabilities';
 
 export const guiaApi = {
   getAll: async (signal?: AbortSignal): Promise<Guia[]> => {
@@ -23,11 +24,10 @@ export const guiaApi = {
   update: async (id: string, values: GuiaFormData): Promise<void> => {
     const v = guiaSchema.parse(values);
     await apiClient.put(`${endpoints.guias}/${encodeURIComponent(id)}`, {
-      name: v.name, address: v.address || undefined, phone: v.phone || undefined,
       contractNumber: v.contractNumber, email: v.email, zone: v.zone,
     });
   },
-  delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`${endpoints.guias}/${encodeURIComponent(id)}`);
+  delete: async (): Promise<void> => {
+    throw new FeatureUnavailableError();
   },
 };

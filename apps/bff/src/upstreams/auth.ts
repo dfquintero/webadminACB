@@ -7,7 +7,12 @@ import type { AuthenticatedSession } from '../modules/auth/session.js';
 
 const responseSchema = z.object({
   token: z.string().min(1).max(16384),
-  user: z.object({ id: z.union([z.string().min(1), z.number().int().nonnegative()]), name: z.string().min(1), role: z.string(), zone: z.string().nullable() }),
+  user: z.object({
+    id: z.union([z.string().min(1), z.number().int().nonnegative()]),
+    role: z.string(),
+    name: z.string().optional(),
+    zone: z.string().nullable().optional(),
+  }).loose(),
 });
 
 export const createAuthClient = (config: BffConfig, fetcher: typeof fetch = fetch) => async (input: LoginInput): Promise<AuthenticatedSession> => {
@@ -24,7 +29,7 @@ export const createAuthClient = (config: BffConfig, fetcher: typeof fetch = fetc
     const result = responseSchema.safeParse(await response.json());
     if (!result.success) throw new ApiFault(502, 'INVALID_UPSTREAM_RESPONSE', 'El servicio devolvió una respuesta no válida.');
     if (result.data.user.role !== 'MANAGER') throw new ApiFault(403, 'MANAGER_REQUIRED', 'Este panel es exclusivo para MANAGER.');
-    const user = sessionUserSchema.parse(result.data.user);
+    const user = sessionUserSchema.parse({ ...result.data.user, name: result.data.user.name ?? input.username, zone: result.data.user.zone ?? null });
     const claims = decodeJwt(result.data.token);
     if (typeof claims.exp !== 'number' || !Number.isSafeInteger(claims.exp)) throw new ApiFault(502, 'INVALID_UPSTREAM_RESPONSE', 'El servicio devolvió una respuesta no válida.');
     const expiresAt = Math.min(claims.exp * 1000, Date.now() + config.SESSION_TTL_SECONDS * 1000);
