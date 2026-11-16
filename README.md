@@ -31,7 +31,7 @@ Configurar la web con `apps/web/.env.local`, tomando `apps/web/.env.example`, y 
 npm run dev
 ```
 
-Abrir `http://localhost:3000`. El `PUBLIC_ORIGIN` del BFF debe coincidir exactamente con el origen del navegador; el ejemplo BFF ya utiliza el puerto 3000. La web utiliza `BFF_INTERNAL_URL` para SSR. En desarrollo, Next.js redirige `/bff` al BFF para conservar un único origen; esa redirección es de destino fijo, no un proxy abierto.
+Abrir `http://localhost:3000`. El BFF valida el `Origin` contra el de la propia petición: Next.js reenvía `x-forwarded-host` y `x-forwarded-proto` al proxyar `/bff/*`, así que `localhost`, cualquier IP de la LAN y la URL de un túnel funcionan sin configurar nada. Opcionalmente, `PUBLIC_ORIGIN` fija un único origen exacto. La web utiliza `BFF_INTERNAL_URL` para SSR. En desarrollo, Next.js redirige `/bff` al BFF para conservar un único origen; esa redirección es de destino fijo, no un proxy abierto.
 
 `AUTH_BASE_URL` es el origen del API gateway, que expone `POST /api/v1/auth/login` y reenvía la petición al servicio auth; el BFF llama a esa ruta con username/password. El contrato revisado devuelve token y usuario; no hay refresh confirmado. El bearer permanece cifrado en Redis. La lectura de exp del JWT limita el TTL, pero no es una verificación de firma ni la fuente de autorización; el rol procede del login servidor-servidor.
 
@@ -46,7 +46,7 @@ El build genera `apps/web/.next/standalone`, incluyendo los archivos estáticos 
 
 Next.js reenvía `/bff/*` al BFF con un `rewrite` de destino fijo (`BFF_INTERNAL_URL`, fijado en tiempo de build), tanto en desarrollo como en Docker; así se conserva un único origen sin proxy adicional. No se crea un segundo BFF en Route Handlers de Next.js. En producción, TLS lo aporta el gateway/ingress de la plataforma.
 
-Para el BFF de producción se exige `PUBLIC_ORIGIN` HTTPS. Detrás de terminación TLS, configurar `TRUSTED_PROXY` con direcciones conocidas, nunca confianza universal. Redis debe permanecer privado, con ACL/credenciales y TLS cuando corresponda. No copiar claves de firma JWT de los servicios existentes.
+Si se define `PUBLIC_ORIGIN` en el BFF de producción, debe ser HTTPS. Sin definirlo, el BFF acepta el origen reenviado por Next y la cookie se llama `acb_session`, sin `Secure`, para servir HTTP en la LAN y HTTPS por túnel a la vez. Detrás de terminación TLS, configurar `TRUSTED_PROXY` con direcciones conocidas, nunca confianza universal. Redis debe permanecer privado, con ACL/credenciales y TLS cuando corresponda. No copiar claves de firma JWT de los servicios existentes.
 
 Se mantiene el modelo sin Cache Components: no añadir caché persistente a las consultas autenticadas. React cache solo deduplica durante el render de una solicitud; los QueryClient no se comparten entre solicitudes o usuarios.
 
@@ -72,9 +72,18 @@ Requiere Docker Desktop con el motor Linux. Copiar `.env.example` a `.env` y com
 docker compose up -d --build
 ```
 
-Abrir `http://localhost:8080` (o el `WEB_PORT` configurado). Se despliegan tres contenedores (web, bff, redis); Next.js publica el puerto y reenvía `/bff/*` al BFF, manteniendo un único origen. Redis es privado dentro de la red; solo se publica en `127.0.0.1:6380` para permitir `npm run test:integration` con `BFF_TEST_REDIS_URL=redis://localhost:6380`.
+Abrir `http://localhost:8080` (o el `WEB_PORT` configurado). También funciona desde otro dispositivo con `http://<IP-LAN>:8080`, sin cambiar `.env`. Se despliegan tres contenedores (web, bff, redis); Next.js publica el puerto y reenvía `/bff/*` al BFF, manteniendo un único origen. Redis es privado dentro de la red; solo se publica en `127.0.0.1:6380` para permitir `npm run test:integration` con `BFF_TEST_REDIS_URL=redis://localhost:6380`.
 
-El BFF se ejecuta en contenedor con `NODE_ENV=development` para aceptar el origen HTTP local: las cookies llevan `SameSite=Lax` sin `Secure`, válido únicamente en desarrollo. En producción se exige `PUBLIC_ORIGIN` HTTPS y proxy de confianza explícito.
+El BFF se ejecuta en contenedor con `NODE_ENV=development`: las cookies llevan `SameSite=Lax` sin `Secure`, válido únicamente en desarrollo. Si se define `PUBLIC_ORIGIN` HTTPS, la cookie pasa a `__Host-acb_session` con `Secure`; en producción se exige HTTPS para ese valor y un proxy de confianza explícito.
+
+Para exponerlo por HTTPS con una URL pública cambiante:
+
+```sh
+docker compose --profile tunnel up -d
+docker compose logs tunnel
+```
+
+La URL `https://<algo>.trycloudflare.com` que aparece en los logs funciona sin tocar `.env`, porque el origen se valida contra el de cada petición. Si en cambio se fija `PUBLIC_ORIGIN`, hay que actualizarlo y recrear `web` y `bff` cada vez que cambie la URL del túnel.
 
 Verificado con Docker 29.9.2: imágenes de web y BFF compiladas, los servicios saludables, CSRF real emitido a través del origen público, redirección de rutas protegidas, sesiones cifradas JWE/A256GCM con TTL en Redis real y `npm run test:integration` pasando. El login real todavía depende de que el servicio auth esté disponible en `AUTH_BASE_URL`.
 

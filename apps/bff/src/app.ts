@@ -1,4 +1,4 @@
-import Fastify, { LogController } from 'fastify';
+import Fastify, { LogController, type FastifyRequest } from 'fastify';
 import cookie from '@fastify/cookie';
 import session, { type SessionStore } from '@fastify/session';
 import csrf from '@fastify/csrf-protection';
@@ -15,8 +15,23 @@ import multipart from '@fastify/multipart';
 
 type Dependencies = { store: SessionStore; authenticate: Authenticate; ready: () => Promise<boolean>; redis?: Redis; close?: () => Promise<void> };
 
+const firstHeader = (value: string | string[] | undefined) => {
+  const raw = Array.isArray(value) ? value[0] : value;
+  return raw?.split(',')[0]?.trim() || undefined;
+};
+
+// Next.js forwards the browser's host and protocol when it proxies /bff/* to
+// the BFF, so the expected origin can be derived per request. That keeps
+// localhost, any LAN IP and any tunnel hostname working without configuration.
+const requestOrigin = (request: FastifyRequest) => {
+  const host = firstHeader(request.headers['x-forwarded-host']) ?? firstHeader(request.headers.host);
+  if (!host) return undefined;
+  const protocol = firstHeader(request.headers['x-forwarded-proto']) ?? request.protocol;
+  return `${protocol}://${host}`;
+};
+
 export const buildApp = async (config: BffConfig, dependencies: Dependencies) => {
-  const secure = config.PUBLIC_ORIGIN.startsWith('https://');
+  const secure = config.PUBLIC_ORIGIN?.startsWith('https://') ?? false;
   const app = Fastify({
     bodyLimit: 16384, requestTimeout: 15000, trustProxy: config.TRUSTED_PROXY?.split(',').map(value => value.trim()) ?? false,
     logController: new LogController({ disableRequestLogging: true }),
@@ -36,7 +51,10 @@ export const buildApp = async (config: BffConfig, dependencies: Dependencies) =>
     if (!request.url.startsWith('/bff/')) return;
     const origin = request.headers.origin;
     const mutation = !['GET', 'HEAD', 'OPTIONS'].includes(request.method);
-    if (request.headers['sec-fetch-site'] === 'cross-site' || (origin && origin !== config.PUBLIC_ORIGIN) || (mutation && origin !== config.PUBLIC_ORIGIN)) {
+    const ownOrigin = requestOrigin(request);
+    const accepted = (value: string | undefined) =>
+      value !== undefined && (value === ownOrigin || value === config.PUBLIC_ORIGIN);
+    if (request.headers['sec-fetch-site'] === 'cross-site' || (origin && !accepted(origin)) || (mutation && !accepted(origin))) {
       throw new ApiFault(403, 'ORIGIN_REJECTED', 'El origen de la solicitud no está permitido.');
     }
   });
@@ -47,7 +65,7 @@ export const buildApp = async (config: BffConfig, dependencies: Dependencies) =>
   await app.register(helmet);
   await app.register(cookie);
   await app.register(session, {
-    secret: config.SESSION_SIGNING_SECRET, cookieName: secure ? '__Host-acb_session' : 'acb_session_dev',
+    secret: config.SESSION_SIGNING_SECRET, cookieName: secure ? '__Host-acb_session' : 'acb_session',
     cookie: { path: '/', httpOnly: true, sameSite: 'lax', secure, maxAge: 600000 },
     store: dependencies.store, saveUninitialized: false, rolling: false,
   });

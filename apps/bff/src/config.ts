@@ -6,11 +6,18 @@ const origin = z.url().refine(value => {
   return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password && url.pathname === '/' && !url.search && !url.hash;
 }).transform(value => new URL(value).origin);
 
+// Compose passes an empty string when the variable is not set. Treat it as
+// "not configured" so the BFF accepts each request's own origin.
+const optionalOrigin = z.preprocess(
+  value => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+  origin.optional(),
+);
+
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   HOST: z.string().default('127.0.0.1'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3001),
-  PUBLIC_ORIGIN: origin,
+  PUBLIC_ORIGIN: optionalOrigin,
   AUTH_BASE_URL: origin,
   ADMIN_USERS_BASE_URL: origin.optional(),
   GEO_BASE_URL: origin.optional(),
@@ -21,7 +28,7 @@ const schema = z.object({
   UPSTREAM_TIMEOUT_MS: z.coerce.number().int().min(100).max(30000).default(8000),
   TRUSTED_PROXY: z.string().min(1).optional(),
 }).superRefine((value, context) => {
-  if (value.NODE_ENV === 'production' && !value.PUBLIC_ORIGIN.startsWith('https://')) {
+  if (value.NODE_ENV === 'production' && value.PUBLIC_ORIGIN && !value.PUBLIC_ORIGIN.startsWith('https://')) {
     context.addIssue({ code: 'custom', path: ['PUBLIC_ORIGIN'], message: 'HTTPS required' });
   }
   if (value.TRUSTED_PROXY === 'true' || value.TRUSTED_PROXY === '*') {

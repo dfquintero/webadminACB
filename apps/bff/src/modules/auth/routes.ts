@@ -6,7 +6,7 @@ import { requireSession, type AuthenticatedSession } from './session.js';
 export type Authenticate = (input: LoginInput) => Promise<AuthenticatedSession>;
 
 export const registerAuthRoutes = async (app: FastifyInstance, authenticate: Authenticate, secure: boolean, adminUsersAvailable = false, geoAvailable = false) => {
-  const cookieName = secure ? '__Host-acb_session' : 'acb_session_dev';
+  const cookieName = secure ? '__Host-acb_session' : 'acb_session';
   app.get('/bff/v1/auth/csrf', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request, reply) => {
     const token = await reply.generateCsrf();
     await request.session.save();
