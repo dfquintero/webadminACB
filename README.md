@@ -33,7 +33,7 @@ npm run dev
 
 Abrir `http://localhost:3000`. El `PUBLIC_ORIGIN` del BFF debe coincidir exactamente con el origen del navegador; el ejemplo BFF ya utiliza el puerto 3000. La web utiliza `BFF_INTERNAL_URL` para SSR. En desarrollo, Next.js redirige `/bff` al BFF para conservar un único origen; esa redirección es de destino fijo, no un proxy abierto.
 
-`AUTH_BASE_URL` es el origen del servicio auth; el BFF llama a `POST /api/v1/auth/login` con username/password. El contrato revisado devuelve token y usuario; no hay refresh confirmado. El bearer permanece cifrado en Redis. La lectura de exp del JWT limita el TTL, pero no es una verificación de firma ni la fuente de autorización; el rol procede del login servidor-servidor.
+`AUTH_BASE_URL` es el origen del API gateway, que expone `POST /api/v1/auth/login` y reenvía la petición al servicio auth; el BFF llama a esa ruta con username/password. El contrato revisado devuelve token y usuario; no hay refresh confirmado. El bearer permanece cifrado en Redis. La lectura de exp del JWT limita el TTL, pero no es una verificación de firma ni la fuente de autorización; el rol procede del login servidor-servidor.
 
 ## Build y arranque SSR
 
@@ -80,7 +80,7 @@ Verificado con Docker 29.9.2: imágenes de web y BFF compiladas, los servicios s
 
 ## Integración admin_users
 
-Con `ADMIN_USERS_BASE_URL` configurado (origen del servicio `ACB_admin_users_lo`), el BFF expone `/bff/v1/students`, `/bff/v1/guides`, `/bff/v1/users` y `/bff/v1/search`, reenviando el JWT de la sesión cifrada en Redis — el navegador nunca lo ve. Capacidades habilitadas: `estudiantes` y `guias`. Estudiantes no tiene DELETE confirmado; la UI no lo ofrece. Asignaciones, asistencia, alertas y dashboard siguen reportados como no disponibles hasta confirmar contrato.
+Con `ADMIN_USERS_BASE_URL` configurado (origen del API gateway, que reenvía a `ACB_admin_users_lo`), el BFF expone `/bff/v1/students`, `/bff/v1/guides`, `/bff/v1/users` y `/bff/v1/search`, reenviando el JWT de la sesión cifrada en Redis — el navegador nunca lo ve. Capacidades habilitadas: `estudiantes` y `guias`. Estudiantes no tiene DELETE confirmado; la UI no lo ofrece. Asignaciones, asistencia, alertas y dashboard siguen reportados como no disponibles hasta confirmar contrato.
 
 ## Integración geoloca
 
@@ -97,8 +97,7 @@ Las rutas se leen sin JWT hacia geoloca; las operaciones de admin_users sí reen
 
 ## Limitaciones actuales
 
-- Los servicios adminACB (`ACB_admin_users_lo`) solo exponen `POST /api/v1/auth/login`: los controladores de students, guides, users y search no están implementados, por lo que esas llamadas reciben 404 del upstream.
-- `admin_operation` no arranca: su migración Flyway usa sintaxis MySQL sobre PostgreSQL.
+- El gateway debe exponer `/api/v1/auth` y `/api/v1/{students,guides,search}`; el BFF consume auth y admin_users desde un mismo origen (`AUTH_BASE_URL` y `ADMIN_USERS_BASE_URL` apuntan al gateway).
 - Asignaciones, asistencia, alertas y dashboard no tienen contrato backend; el BFF los reporta como no disponibles.
 - El login real requiere un usuario con rol MANAGER en `acb_auth_db`.
 
