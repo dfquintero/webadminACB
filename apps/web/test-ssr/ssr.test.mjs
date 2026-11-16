@@ -25,7 +25,8 @@ const bff = createServer((request, response) => {
   else response.writeHead(404).end('{}');
 });
 const listen = async server => { server.listen(0, '127.0.0.1'); await once(server, 'listening'); return server.address().port; };
-const request = (path, cookie = '') => fetch(`${base}${path}`, { redirect: 'manual', headers: cookie ? { cookie: `acb_session_dev=${cookie}` } : {}, signal: AbortSignal.timeout(20000) });
+const sessionCookie = 'acb_session';
+const request = (path, cookie = '') => fetch(`${base}${path}`, { redirect: 'manual', headers: cookie ? { cookie: `${sessionCookie}=${cookie}` } : {}, signal: AbortSignal.timeout(20000) });
 
 before(async () => {
   const bffPort = await listen(bff);
