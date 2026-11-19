@@ -93,7 +93,7 @@ Con `ADMIN_USERS_BASE_URL` configurado (origen del API gateway, que reenvía a `
 
 ## Integración geoloca
 
-Con `GEO_BASE_URL` configurado (origen del servicio geoloca, `acb_path_lo`), el BFF expone:
+Con `GEO_BASE_URL` configurado (origen del API gateway, que reenvía a `acb_path_lo`), el BFF expone:
 
 - `GET /bff/v1/geo/routes`
 - `GET /bff/v1/geo/routes/search?code=&route_code=`
@@ -106,7 +106,7 @@ Las rutas se leen sin JWT hacia geoloca; las operaciones de admin_users sí reen
 
 ## Limitaciones actuales
 
-- El gateway debe exponer `/api/v1/auth` y `/api/v1/{students,guides,search}`; el BFF consume auth y admin_users desde un mismo origen (`AUTH_BASE_URL` y `ADMIN_USERS_BASE_URL` apuntan al gateway).
+- El gateway debe exponer `/api/v1/auth`, `/api/v1/{students,guides,search}`, `/api/v1/{routes,meeting-points,imports,status}` y `/api/v1/tracking-sessions`; el BFF consume auth, admin_users y geoloca desde un mismo origen (`AUTH_BASE_URL`, `ADMIN_USERS_BASE_URL` y `GEO_BASE_URL` apuntan al gateway).
 - Asignaciones, asistencia, alertas y dashboard no tienen contrato backend; el BFF los reporta como no disponibles.
 - El login real requiere un usuario con rol MANAGER en `acb_auth_db`.
 
